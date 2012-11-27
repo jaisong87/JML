@@ -101,4 +101,30 @@ public class FeatureVector {
 
 		return featureStr;
 	}
+
+	public boolean isClassificationProblem() {
+		if(_class==null)
+			return false;
+		return true;
+	}
+	
+	/* Check whether two feature vectors are of same type */
+	public boolean checkCompatibility(FeatureVector fv) {
+		if( getSize() != fv.getSize())
+			return false;
+		
+		if( (hasCategoricalValues()^(fv.hasCategoricalValues()) ) == true )
+				return false;
+
+		if( (hasRealValues()^(fv.hasRealValues()) ) == true )
+			return false;
+
+		if( (hasNumericalValues()^(fv.hasNumericalValues()) ) == true )
+			return false;
+				
+		if( (isClassificationProblem()^(fv.isClassificationProblem()) ) == true )
+			return false;
+				
+		return true;
+	}
 }
