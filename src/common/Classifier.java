@@ -12,6 +12,13 @@ import java.util.Vector;
 public abstract class Classifier {
 	
 	private Vector<FeatureVector> _trainingVector, _testVector;
+	String _classifierName;
+
+	Classifier() {
+		_trainingVector = new Vector<FeatureVector>();
+		_testVector = new Vector<FeatureVector>();
+		_classifierName = "Unknown Classifier";
+	}
 
 	/* Add another training example */
 	public boolean addTrainingExample(FeatureVector fv) {
@@ -43,4 +50,22 @@ public abstract class Classifier {
 		return true;
 	}
 
+	public abstract boolean train();
+	public abstract boolean test();
+	
+	public void printTrainingSet() {
+		System.out.println("-------- Training set for : "+_classifierName+ "----------------");
+		for(int i=0;i<_trainingVector.size();i++)
+			System.out.println(_trainingVector.elementAt(i).getFeatureCSVString(","));	
+		System.out.println("----------------------------------------------------------------");
+		return;
+	}
+	
+	public void printTestSet() {
+		System.out.println("--------- Testing set for : "+_classifierName+ "----------------");
+		for(int i=0;i<_testVector.size();i++)
+			System.out.println(_testVector.elementAt(i).getFeatureCSVString(","));	
+		System.out.println("----------------------------------------------------------------");
+		return;
+	}
 }
