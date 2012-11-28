@@ -7,7 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Vector;
 
+import common.ClassifierException;
 import common.FeatureVector;
+import common.FeatureVectorException;
+import common.TrainingException;
 
 
 public class NaiveBayesExample1 {
@@ -19,11 +22,7 @@ public class NaiveBayesExample1 {
 		return ch;
 	}
 	
-	public static void main(String args[]) throws IOException{
-		//testimages
-		//testlabels
-		//trainingimages
-		//traininglabels
+	public static void main(String args[]) throws IOException, TrainingException, ClassifierException, FeatureVectorException{
 		
 		  FileReader trainImageStream = null, trainlabelStream = null, testImageStream = null, testLabelStream = null;
 		  NaiveBayes nBayes = new NaiveBayes();

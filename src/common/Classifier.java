@@ -99,21 +99,27 @@ public abstract class Classifier {
 	}
 
 	/* Add another training example */
-	public boolean addTrainingExample(FeatureVector fv) {
+	public void addTrainingExample(FeatureVector fv) throws TrainingException{
+		if(_testVector.size() > 0)
+		{
+			if(fv.checkCompatibility(_testVector.elementAt(0)) == false )
+				throw new TrainingException("Feature Vector not compatible " +
+						"with previously added feature vectors in testSet");
+		}
+		
 		if(_trainingVector.size() > 0)
 		{
 			if(fv.checkCompatibility(_trainingVector.elementAt(0)) == false )
 			{
-				//add appropriate exception here
-				return false;
+				throw new TrainingException("Feature Vector not compatible " +
+						"with previously added feature vectors in trainingSet");
 			}	
 		}
-		
+
 		_trainingVector.add(fv); /* This is compatible. so add it*/
-		return true;
 	}
 
-	public boolean test() {
+	public boolean test() throws TrainingException, ClassifierException, FeatureVectorException {
 		// TODO Auto-generated method stub
 		clearConfusionMatrix();
 		
@@ -129,6 +135,7 @@ public abstract class Classifier {
 			samples++;
 			addResultToConfusionMAtrix(trueLabel, predictedLabel);
 		}
+
 		double accuracy = correct/samples;
 		System.out.println("Accuracy : "+(100*accuracy)+"%");
 		printConfusionMatrix();
@@ -136,22 +143,28 @@ public abstract class Classifier {
 	}
 
 	/* Add another training example */
-	public boolean addTestExample(FeatureVector fv) {
+	public void addTestExample(FeatureVector fv) throws TrainingException {
 		if(_testVector.size() > 0)
 		{
 			if(fv.checkCompatibility(_testVector.elementAt(0)) == false )
+				throw new TrainingException("Feature Vector not compatible " +
+						"with previously added feature vectors in testSet");
+		}
+		
+		if(_trainingVector.size() > 0)
+		{
+			if(fv.checkCompatibility(_trainingVector.elementAt(0)) == false )
 			{
-				//add appropriate exception here
-				return false;
+				throw new TrainingException("Feature Vector not compatible " +
+						"with previously added feature vectors in trainingSet");
 			}	
 		}
 		
 		_testVector.add(fv); /* This is compatible. so add it*/
-		return true;
 	}
 
-	public abstract boolean train();
-	protected abstract String predictClass(FeatureVector fv);
+	public abstract boolean train() throws TrainingException, ClassifierException;
+	protected abstract String predictClass(FeatureVector fv) throws TrainingException, ClassifierException, FeatureVectorException;
 	
 	public void printTrainingSet(String fileName, String delim) throws IOException {
 		
