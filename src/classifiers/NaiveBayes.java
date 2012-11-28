@@ -259,6 +259,27 @@ public class NaiveBayes extends Classifier {
 		return posterior;
 	}
 	
+	private String predictClass(FeatureVector fv) {
+		String bestClass = null;
+		double curBest = 0.0;
+		
+		for(String classLabel:_classFrequency.keySet())
+		{
+			double curPosterior = predictProbability(classLabel, fv);
+			if(bestClass == null ){
+				bestClass = classLabel;
+				curBest = curPosterior;
+			}
+			else if( curBest < curPosterior)
+			{
+				bestClass = classLabel;
+				curBest = curPosterior;				
+			}
+		}
+		
+		return bestClass;
+	}
+	
 	@Override
 	public boolean train() {
 		
@@ -315,6 +336,12 @@ public class NaiveBayes extends Classifier {
 	@Override
 	public boolean test() {
 		// TODO Auto-generated method stub
+		for(int i=0;i<_testVector.size();i++) {
+			FeatureVector fv = _testVector.elementAt(i);
+			String predictedLabel = predictClass(fv);
+			String trueLabel = fv.getClassification();
+			System.out.println(predictedLabel + " predicted for "+trueLabel);
+		}
 		return false;
 	}
 
