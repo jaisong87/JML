@@ -13,8 +13,9 @@ public class KNN extends Classifier {
 
 	private int _k;
 	
-	KNN() {
-		_k = -1; /* User should explicitly set K*/
+	public KNN(int neighbours) {
+		_k = neighbours; /* User should explicitly set K*/
+		_classifierName = "KNN";
 	}
 
 	public void setK(int K) {

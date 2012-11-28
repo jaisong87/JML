@@ -131,7 +131,7 @@ public abstract class Classifier {
 			String trueLabel = fv.getClassification();
 			if(predictedLabel.equals(trueLabel))
 				correct++;
-			System.out.println(predictedLabel + " predicted for "+trueLabel);
+			System.out.println(_classifierName+" : Sample#"+ i + " " + predictedLabel + " predicted for "+trueLabel);
 			samples++;
 			addResultToConfusionMAtrix(trueLabel, predictedLabel);
 		}
