@@ -35,7 +35,7 @@ public class NaiveBayes extends Classifier {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+/*	public static void main(String[] args) {
 		
 		NaiveBayes nBayes = new NaiveBayes();
 		
@@ -58,7 +58,7 @@ public class NaiveBayes extends Classifier {
 		}
 		
 		nBayes.printTrainingSet();
-	}
+	}*/
 
 	/* Add a data point Frequency(Class=Ci, Feature[featureIdx] = value) */
 	private void addRealDataPoint(String classification, int featureIdx, Double value) {
@@ -161,7 +161,8 @@ public class NaiveBayes extends Classifier {
 		}
 		else {
 			int classFrequency = _classFrequency.get(classification);
-			double likelihood = (1.0*classFrequency)/curFrqCount;
+			int keySize = _classFrequency.keySet().size();
+			double likelihood = (1.0 + classFrequency)/(keySize +curFrqCount);
 			return likelihood;
 		}
 	}
@@ -189,7 +190,8 @@ public class NaiveBayes extends Classifier {
 		}
 		else {
 			int classFrequency = _classFrequency.get(classification);
-			double likelihood = (1.0*classFrequency)/curFrqCount;
+			int keySize = _classFrequency.keySet().size();
+			double likelihood = (1.0 + classFrequency)/(keySize +curFrqCount);
 			return likelihood;
 		}
 	}
@@ -217,7 +219,8 @@ public class NaiveBayes extends Classifier {
 		}
 		else {
 			int classFrequency = _classFrequency.get(classification);
-			double likelihood = (1.0*classFrequency)/curFrqCount;
+			int keySize = _classFrequency.keySet().size();
+			double likelihood = (1.0 + classFrequency)/(keySize +curFrqCount);
 			return likelihood;
 		}
 	}
@@ -231,30 +234,36 @@ public class NaiveBayes extends Classifier {
 	
 	/* Predict probability of a class - THIS NEEDS LAPLACE SMOOTHENING */
 	private double predictProbability(String classification, FeatureVector fv){
-		double posterior = 1.0;
+		double posterior = 0.0;
 		
 		/* Multiply with prior*/
 		double prior = getPriorProbability(classification);
-		posterior *= prior;
+		posterior += Math.log(prior);
 		
 		/* Now multiply with likelihood */
 		Vector<Double> realValues = fv.getRealValues();
+		if(realValues != null) {
 		for(int i=0;i<realValues.size();i++)
-		{
-			posterior *= getRealDataLikelihood(classification, i, realValues.elementAt(i));
-		}	
+			{
+				posterior += Math.log(getRealDataLikelihood(classification, i, realValues.elementAt(i)));
+			}	
+		}
 
 		Vector<Integer> numericValues = fv.getNumericalValues();
-		for(int i=0;i<numericValues.size();i++)
-		{
-			posterior *= getNumericDataLikelihood(classification, i, numericValues.elementAt(i));
-		}	
+		if(numericValues != null) {
+			for(int i=0;i<numericValues.size();i++)
+			{
+				posterior += Math.log(getNumericDataLikelihood(classification, i, numericValues.elementAt(i)));
+			}	
+		}
 
 		Vector<String> nomValues = fv.getCategoricalValues();
-		for(int i=0;i<realValues.size();i++)
-		{
-			posterior *= getNominalDataLikelihood(classification, i, nomValues.elementAt(i));
-		}	
+		if(nomValues != null){
+			for(int i=0;i<realValues.size();i++)
+			{
+				posterior += Math.log(getNominalDataLikelihood(classification, i, nomValues.elementAt(i)));
+			}	
+		}
 
 		return posterior;
 	}
@@ -303,11 +312,6 @@ public class NaiveBayes extends Classifier {
 		if(_classFrequency.size() <= 1) /* Should contain at least two classes for classification */
 			return false;
 		
-		/* get the dimensionality for different types of features*/
-		FeatureVector firstSample = _trainingVector.elementAt(0);
-		int realFeatureCount = firstSample.getRealValues().size();
-		int numericFeatureCount = firstSample.getNumericalValues().size();
-		int nominalFeatureCount = firstSample.getCategoricalValues().size();
 		
 		for(int i=0;i<_trainingVector.size();i++)
 		{
@@ -316,19 +320,26 @@ public class NaiveBayes extends Classifier {
 			
 			/* Update real data point for class classification*/
 			Vector<Double> realValues = curTrainigVector.getRealValues();
-			for(int j=0;j<realValues.size();j++)
+			if(realValues != null)
+				{
+				for(int j=0;j<realValues.size();j++)
 				addRealDataPoint(classification, j, realValues.elementAt(j));
-
+				}
+			
 			/* Update numeric data point for class classification */
 			Vector<Integer> numValues = curTrainigVector.getNumericalValues();
+			if(numValues != null) {
 			for(int j=0;j<numValues.size();j++)
 				this.addNumericDataPoint(classification, j, numValues.elementAt(j));
-
+				}
+			
 			/* Update nominal data point for class classification */
 			Vector<String> nomValues = curTrainigVector.getCategoricalValues();
+			if(nomValues != null) {
 			for(int j=0;j<nomValues.size();j++)
 				addNominalDataPoint(classification, j, nomValues.elementAt(j));
-		}
+				}
+			}
 		return true;
 	}
 

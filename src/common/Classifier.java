@@ -3,6 +3,9 @@
  */
 package common;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Vector;
 
 /**
@@ -53,11 +56,22 @@ public abstract class Classifier {
 	public abstract boolean train();
 	public abstract boolean test();
 	
-	public void printTrainingSet() {
+	public void printTrainingSet(String fileName) throws IOException {
+		
+	if(fileName != null) {	
+	    PrintWriter out = new PrintWriter(new FileWriter(fileName));	      
+		out.println("-------- Training set for : "+_classifierName+ "("+_trainingVector.size()+" samples )----------------");
+		for(int i=0;i<_trainingVector.size();i++)
+			out.println(_trainingVector.elementAt(i).getFeatureCSVString(","));	
+		out.println("----------------------------------------------------------------"); 
+		out.close();
+	}
+	else {
 		System.out.println("-------- Training set for : "+_classifierName+ "----------------");
 		for(int i=0;i<_trainingVector.size();i++)
 			System.out.println(_trainingVector.elementAt(i).getFeatureCSVString(","));	
-		System.out.println("----------------------------------------------------------------");
+		System.out.println("----------------------------------------------------------------"); 		
+	}
 		return;
 	}
 	

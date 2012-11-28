@@ -87,7 +87,11 @@ public class FeatureVector {
 		if(_numericalValues != null )
 			{
 				for(int i=0;i<_numericalValues.size();i++)
-					featureStr+=_numericalValues.elementAt(i)+delim;
+					{
+					if(i>0 && i%28==0)
+						featureStr+="\n";
+						featureStr+=_numericalValues.elementAt(i)+delim;
+					}
 			}
 		if(_realValues != null)
 			{
@@ -101,7 +105,7 @@ public class FeatureVector {
 			}
 		
 		if(_class != null)
-			featureStr+=_class;
+			featureStr+="\n"+_class;
 		else /*if(_functionValue != null)*/ 
 			featureStr += _functionValue;
 		/*else 
