@@ -16,16 +16,16 @@ public class FeatureVector {
 	private Vector<Double> _realValues;
 
 	String _class; /* Class of this data point */
-	float _functionValue; /* Used for regression */
+	double _functionValue; /* Used for regression */
 	
-	FeatureVector(Vector<String> ctValues, Vector<Integer> nmValues, Vector<Double> rlValues, 
-			String classification, float funcVal) {
+	public FeatureVector(Vector<String> ctValues, Vector<Integer> nmValues, Vector<Double> rlValues, 
+			String classification, double d) {
 		_categoricalValues = ctValues;
 		_numericalValues = nmValues;
 		_realValues = rlValues;
 		
 		_class = classification;
-		_functionValue = funcVal;
+		_functionValue = d;
 	}
 
 	
@@ -59,6 +59,14 @@ public class FeatureVector {
 	
 	public Vector<Double> getRealValues() {
 		return _realValues;
+	}
+	
+	public String getClassification() {
+		return _class;
+	}
+	
+	public double getFunctionValue() {
+		return _functionValue;
 	}
 	
 	/* Get the dimensionality of this featureVector */

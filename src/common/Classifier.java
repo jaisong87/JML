@@ -10,11 +10,11 @@ import java.util.Vector;
  *
  */
 public abstract class Classifier {
-	
-	private Vector<FeatureVector> _trainingVector, _testVector;
-	String _classifierName;
+	protected Vector<FeatureVector> _trainingVector;
+	protected Vector<FeatureVector> _testVector;
+	protected String _classifierName;
 
-	Classifier() {
+	public Classifier() {
 		_trainingVector = new Vector<FeatureVector>();
 		_testVector = new Vector<FeatureVector>();
 		_classifierName = "Unknown Classifier";
@@ -68,4 +68,5 @@ public abstract class Classifier {
 		System.out.println("----------------------------------------------------------------");
 		return;
 	}
+
 }
