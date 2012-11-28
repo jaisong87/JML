@@ -32,18 +32,19 @@ public class NaiveBayesExample1 {
 			  trainImageStream = new FileReader("trainingimages");
 			  trainlabelStream = new FileReader("traininglabels");
 			  
-			  int digit, fval;
+			  int digit;
+			  char fval;
 			  while( (digit = getNextChar(trainlabelStream)) != -1)
 			  {
 				  String classLabel = (char)digit+"";
-				  Vector<Integer> numericFeatureValues = new Vector<Integer>();
+				  Vector<String> nominalValues = new Vector<String>();
 				  for(int i=0;i<28;i++)
 					  for(int j=0;j<28;j++)
 					  {
-						  fval = getNextChar(trainImageStream);
-						  numericFeatureValues.add(fval);
+						  fval = (char)getNextChar(trainImageStream);
+						  nominalValues.add(fval+"");
 					  }
-				  FeatureVector fVector = new FeatureVector(null, numericFeatureValues, null, classLabel, 0.0);
+				  FeatureVector fVector = new FeatureVector( nominalValues, null, null, classLabel, 0.0);
 				  nBayes.addTrainingExample(fVector);
 			  }
 
@@ -52,14 +53,14 @@ public class NaiveBayesExample1 {
 			  while( (digit = getNextChar(testLabelStream)) != -1)
 			  {
 				  String classLabel = (char)digit+"";
-				  Vector<Integer> numericFeatureValues = new Vector<Integer>();
+				  Vector<String> nominalValues = new Vector<String>();
 				  for(int i=0;i<28;i++)
 					  for(int j=0;j<28;j++)
 					  {
-						  fval = getNextChar(testImageStream);
-						  numericFeatureValues.add(fval);
+						  fval = (char)getNextChar(testImageStream);
+						  nominalValues.add(fval+"");
 					  }
-				  FeatureVector fVector = new FeatureVector(null, numericFeatureValues, null, classLabel, 0.0);
+				  FeatureVector fVector = new FeatureVector(nominalValues, null, null, classLabel, 0.0);
 				  nBayes.addTestExample(fVector);
 			  }
 		  }
@@ -67,7 +68,8 @@ public class NaiveBayesExample1 {
 			  System.out.println("Successfully read input");
 		  }
 		  
-		  nBayes.printTrainingSet("trainingDump1");
+		  nBayes.printTrainingSet("trainingDump1","");
+		  nBayes.printTestSet("testDump1","");
 		  nBayes.train();
 		  nBayes.test();
 		  return;

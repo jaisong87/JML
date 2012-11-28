@@ -90,7 +90,7 @@ public class FeatureVector {
 					{
 					if(i>0 && i%28==0)
 						featureStr+="\n";
-						featureStr+=_numericalValues.elementAt(i)+delim;
+					featureStr+=_numericalValues.elementAt(i)+delim;
 					}
 			}
 		if(_realValues != null)
@@ -101,7 +101,11 @@ public class FeatureVector {
 		if(_categoricalValues != null)
 			{
 			for(int i=0;i<_categoricalValues.size();i++)
+				{
+				if(i>0 && i%28==0)
+					featureStr+="\n";
 				featureStr+=_categoricalValues.elementAt(i)+delim;
+				}
 			}
 		
 		if(_class != null)

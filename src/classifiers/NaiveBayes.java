@@ -162,7 +162,8 @@ public class NaiveBayes extends Classifier {
 		else {
 			int classFrequency = _classFrequency.get(classification);
 			int keySize = _classFrequency.keySet().size();
-			double likelihood = (1.0 + classFrequency)/(keySize +curFrqCount);
+			double likelihood = (1.0 + curFrqCount)/(keySize + classFrequency );
+			assert likelihood<=1.0;
 			return likelihood;
 		}
 	}
@@ -191,7 +192,8 @@ public class NaiveBayes extends Classifier {
 		else {
 			int classFrequency = _classFrequency.get(classification);
 			int keySize = _classFrequency.keySet().size();
-			double likelihood = (1.0 + classFrequency)/(keySize +curFrqCount);
+			double likelihood = (1.0 + curFrqCount)/(keySize + classFrequency );
+			assert likelihood<=1.0;
 			return likelihood;
 		}
 	}
@@ -220,7 +222,8 @@ public class NaiveBayes extends Classifier {
 		else {
 			int classFrequency = _classFrequency.get(classification);
 			int keySize = _classFrequency.keySet().size();
-			double likelihood = (1.0 + classFrequency)/(keySize +curFrqCount);
+			double likelihood = (1.0 + curFrqCount)/(keySize + classFrequency );
+			assert likelihood<=1.0;
 			return likelihood;
 		}
 	}
@@ -229,6 +232,7 @@ public class NaiveBayes extends Classifier {
 		int totalTrainingSamples = _trainingVector.size();
 		int classFrequency = _classFrequency.get(classification);
 		double prior = (1.0*classFrequency)/totalTrainingSamples;
+		assert prior<=1.0;
 		return prior;
 	}
 	
@@ -259,7 +263,7 @@ public class NaiveBayes extends Classifier {
 
 		Vector<String> nomValues = fv.getCategoricalValues();
 		if(nomValues != null){
-			for(int i=0;i<realValues.size();i++)
+			for(int i=0;i<nomValues.size();i++)
 			{
 				posterior += Math.log(getNominalDataLikelihood(classification, i, nomValues.elementAt(i)));
 			}	
@@ -268,13 +272,14 @@ public class NaiveBayes extends Classifier {
 		return posterior;
 	}
 	
-	private String predictClass(FeatureVector fv) {
+	protected String predictClass(FeatureVector fv) {
 		String bestClass = null;
 		double curBest = 0.0;
 		
 		for(String classLabel:_classFrequency.keySet())
 		{
 			double curPosterior = predictProbability(classLabel, fv);
+			System.out.print("["+curPosterior+"("+classLabel+"),");
 			if(bestClass == null ){
 				bestClass = classLabel;
 				curBest = curPosterior;
@@ -285,6 +290,7 @@ public class NaiveBayes extends Classifier {
 				curBest = curPosterior;				
 			}
 		}
+		System.out.println(" => "+fv.getClassification()+"<-->"+bestClass);
 		
 		return bestClass;
 	}
@@ -341,19 +347,6 @@ public class NaiveBayes extends Classifier {
 				}
 			}
 		return true;
-	}
-
-	
-	@Override
-	public boolean test() {
-		// TODO Auto-generated method stub
-		for(int i=0;i<_testVector.size();i++) {
-			FeatureVector fv = _testVector.elementAt(i);
-			String predictedLabel = predictClass(fv);
-			String trueLabel = fv.getClassification();
-			System.out.println(predictedLabel + " predicted for "+trueLabel);
-		}
-		return false;
 	}
 
 }
