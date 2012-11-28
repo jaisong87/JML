@@ -8,7 +8,6 @@ import common.FeatureVector;
 
 public class NaiveBayes extends Classifier {
 
-	private HashMap<String, Double > _priorProbability; /* <K, V> => < Class, P(Class) >*/
 	private HashMap<String, Integer> _classFrequency;    /* <K, V> => < Class, Count(Class) >*/
 
 	/* likelihoodFrequnecyForNums[C][featureIdx][featureVal] = Count(Class=C, va for featureIdx = featureVal)*/
@@ -27,7 +26,6 @@ public class NaiveBayes extends Classifier {
 		/**
 		 * Posterior = (prior * likelihood )/evidence
 		 */
-		_priorProbability = new HashMap<String, Double>();
 		_classFrequency = new HashMap<String, Integer>();
 		_likelihoodFrequnecyForNums = new HashMap<String, HashMap<Integer, HashMap<Integer, Integer >>>();
 		_likelihoodFrequnecyForDouble = new HashMap<String, HashMap<Integer, HashMap<Double, Integer >>>();
@@ -140,6 +138,127 @@ public class NaiveBayes extends Classifier {
 		}
 	}
 
+	/* Get Frequency(Class=Ci, Feature[featureIdx] = value) */
+	private double getRealDataLikelihood(String classification, int featureIdx, Double value) {
+		HashMap<Integer, HashMap<Double, Integer>> classMap = _likelihoodFrequnecyForDouble.get(classification);
+		if(classMap == null)
+		{
+			classMap = new HashMap<Integer, HashMap<Double, Integer >>();
+			_likelihoodFrequnecyForDouble.put(classification, classMap);
+		}
+		
+		HashMap<Double, Integer> frqCount = classMap.get(featureIdx);
+		if(frqCount == null )
+		{
+			frqCount = new HashMap<Double, Integer>();
+			classMap.put(featureIdx, frqCount);
+		}
+		
+		Integer curFrqCount = frqCount.get(value);
+		if(curFrqCount == null)
+		{
+			return 0.0;
+		}
+		else {
+			int classFrequency = _classFrequency.get(classification);
+			double likelihood = (1.0*classFrequency)/curFrqCount;
+			return likelihood;
+		}
+	}
+
+	/* Get data point Frequency(Class=Ci, Feature[featureIdx] = value) */
+	private double getNumericDataLikelihood(String classification, int featureIdx, Integer value) {
+		HashMap<Integer, HashMap<Integer, Integer>> classMap = _likelihoodFrequnecyForNums.get(classification);
+		if(classMap == null)
+		{
+			classMap = new HashMap<Integer, HashMap<Integer, Integer >>();
+			_likelihoodFrequnecyForNums.put(classification, classMap);
+		}
+		
+		HashMap<Integer, Integer> frqCount = classMap.get(featureIdx);
+		if(frqCount == null )
+		{
+			frqCount = new HashMap<Integer, Integer>();
+			classMap.put(featureIdx, frqCount);
+		}
+		
+		Integer curFrqCount = frqCount.get(value);
+		if(curFrqCount == null)
+		{
+			return 0.0;
+		}
+		else {
+			int classFrequency = _classFrequency.get(classification);
+			double likelihood = (1.0*classFrequency)/curFrqCount;
+			return likelihood;
+		}
+	}
+
+	/* Get Frequency(Class=Ci, Feature[featureIdx] = value) */
+	private double getNominalDataLikelihood(String classification, int featureIdx, String value) {
+		HashMap<Integer, HashMap<String, Integer>> classMap = _likelihoodFrequnecyForNominals.get(classification);
+		if(classMap == null)
+		{
+			classMap = new HashMap<Integer, HashMap<String, Integer >>();
+			_likelihoodFrequnecyForNominals.put(classification, classMap);
+		}
+		
+		HashMap<String, Integer> frqCount = classMap.get(featureIdx);
+		if(frqCount == null )
+		{
+			frqCount = new HashMap<String, Integer>();
+			classMap.put(featureIdx, frqCount);
+		}
+
+		Integer curFrqCount = frqCount.get(value);
+		if(curFrqCount == null)
+		{
+			return 0.0;
+		}
+		else {
+			int classFrequency = _classFrequency.get(classification);
+			double likelihood = (1.0*classFrequency)/curFrqCount;
+			return likelihood;
+		}
+	}
+
+	private double getPriorProbability(String classification) {
+		int totalTrainingSamples = _trainingVector.size();
+		int classFrequency = _classFrequency.get(classification);
+		double prior = (1.0*classFrequency)/totalTrainingSamples;
+		return prior;
+	}
+	
+	/* Predict probability of a class - THIS NEEDS LAPLACE SMOOTHENING */
+	private double predictProbability(String classification, FeatureVector fv){
+		double posterior = 1.0;
+		
+		/* Multiply with prior*/
+		double prior = getPriorProbability(classification);
+		posterior *= prior;
+		
+		/* Now multiply with likelihood */
+		Vector<Double> realValues = fv.getRealValues();
+		for(int i=0;i<realValues.size();i++)
+		{
+			posterior *= getRealDataLikelihood(classification, i, realValues.elementAt(i));
+		}	
+
+		Vector<Integer> numericValues = fv.getNumericalValues();
+		for(int i=0;i<numericValues.size();i++)
+		{
+			posterior *= getNumericDataLikelihood(classification, i, numericValues.elementAt(i));
+		}	
+
+		Vector<String> nomValues = fv.getCategoricalValues();
+		for(int i=0;i<realValues.size();i++)
+		{
+			posterior *= getNominalDataLikelihood(classification, i, nomValues.elementAt(i));
+		}	
+
+		return posterior;
+	}
+	
 	@Override
 	public boolean train() {
 		
