@@ -18,7 +18,10 @@ public class CommonUtils {
 		
 		for(int i=0;i<totalSamples;i++){
 			String curClass = vf.get(i).getClassification();	
-			classFrqMap.put(curClass, classFrqMap.get(curClass) + 1);
+			Integer curFrq = classFrqMap.get(curClass);
+			if(curFrq != null)
+				classFrqMap.put(curClass, curFrq + 1);
+			else classFrqMap.put(curClass, 1);
 		}
 		
 		for(Map.Entry<String, Integer> classFrq : classFrqMap.entrySet()){
@@ -29,6 +32,71 @@ public class CommonUtils {
 		}
 		
 		return entropy;
+	}
+	
+	/*
+	 * Calculate the info gain for splitting across a nominal 
+	 */
+	public static double getInformationGainOnNominalFeature(Vector<FeatureVector> vf, int featureIdx) {
+		double rootEntropy = CommonUtils.getEntropy(vf);
+		double childEntropy = 0;
+		int totalSamples = vf.size();
+		
+		HashMap<String, Vector<FeatureVector>> childMap = new HashMap<String, Vector<FeatureVector>>();
+		
+		for(int i=0;i<totalSamples;i++) { /* Segragate into sets based on nominal feature value*/
+			FeatureVector curSample = vf.get(i);
+			String nominalValue = curSample.getCategoricalValues().get(featureIdx);
+			
+			Vector<FeatureVector> childVector = childMap.get(nominalValue);
+			if(childVector == null)
+				childVector = new Vector<FeatureVector>();
+			
+			childVector.add(curSample); 
+			childMap.put(nominalValue, childVector);
+		}
+		
+		/* calculate child entropy as weighted sum 
+		 * of entropies across all children
+		 */
+		for(Vector<FeatureVector> childNode : childMap.values()) { 
+			double childNodeWeight = (double)childNode.size()/(double)totalSamples;
+			childEntropy += childNodeWeight*CommonUtils.getEntropy(childNode);
+		}
+		
+		return rootEntropy - childEntropy;
+	}
+
+	/*
+	 * Calculate the info gain for splitting across a real valued feature 
+	 */
+	public static double getInformationGainOnRealFeature(Vector<FeatureVector> vf, int featureIdx, double curSplitPoint) {
+		double rootEntropy = CommonUtils.getEntropy(vf);
+		double childEntropy = 0;
+		int totalSamples = vf.size();
+		
+		Vector<FeatureVector> leftSubTree = new Vector<FeatureVector>();
+		Vector<FeatureVector> rightSubTree = new Vector<FeatureVector>();
+		
+		for(int i=0;i<totalSamples;i++) { /* Segragate into sets based on nominal feature value*/
+			FeatureVector curSample = vf.get(i);
+			double realValue = curSample.getRealValues().get(featureIdx);
+			
+			if(realValue < curSplitPoint)
+				leftSubTree.add(curSample);
+			else 	
+				rightSubTree.add(curSample);
+		}
+		
+		/* calculate child entropy as weighted sum of entropies across left and right children */
+		 
+			double leftTreeWeight = (double)leftSubTree.size()/(double)totalSamples;
+			childEntropy += leftTreeWeight*CommonUtils.getEntropy(leftSubTree);
+
+			double rightTreeWeight = (double)rightSubTree.size()/(double)totalSamples;
+			childEntropy += rightTreeWeight*CommonUtils.getEntropy(rightSubTree);
+			
+		return rootEntropy - childEntropy;
 	}
 	
 	public static double getEuclidianDistance(FeatureVector f1, FeatureVector f2) 
