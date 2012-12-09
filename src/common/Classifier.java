@@ -73,6 +73,8 @@ public abstract class Classifier {
 	
 	void printConfusionMatrix()
 	{
+		System.out.println();
+		System.out.println("Confusion Matrix for " + _classifierName);
 		Set<String> classLabels = _confusionMatrix.keySet();
 		System.out.print("     |");
 		HashSet<String> predLabels = new HashSet<String>();
@@ -122,6 +124,10 @@ public abstract class Classifier {
 	public boolean test() throws TrainingException, ClassifierException, FeatureVectorException {
 		// TODO Auto-generated method stub
 		clearConfusionMatrix();
+		HashMap<String, Integer> classFrequency = new HashMap<String, Integer>();
+		HashMap<String, Integer> predictions = new HashMap<String, Integer>();
+		HashMap<String, Integer> correctPredictions = new HashMap<String, Integer>();
+		
 		
 		double samples = 0;
 		double correct = 0;
@@ -134,12 +140,81 @@ public abstract class Classifier {
 			System.out.println(_classifierName+" : Sample#"+ i + " " + predictedLabel + " predicted for "+trueLabel);
 			samples++;
 			addResultToConfusionMAtrix(trueLabel, predictedLabel);
+			
+			Integer frq = classFrequency.get(trueLabel);
+			if(frq == null)
+				frq = 0;
+			classFrequency.put(trueLabel, frq+1);
+			
+			frq = predictions.get(predictedLabel);
+			if(frq == null)
+				frq = 0;
+			predictions.put(predictedLabel, frq+1);
+
+			if(trueLabel.equals(predictedLabel)) {
+			frq = correctPredictions.get(predictedLabel);
+			if(frq == null)
+				frq = 0;
+			correctPredictions.put(predictedLabel, frq+1);
+			}
 		}
 
 		double accuracy = correct/samples;
 		System.out.println("Accuracy : "+(100*accuracy)+"%");
 		printConfusionMatrix();
-		return false;
+		System.out.println();
+
+		double netPrecision =0, netRecall = 0, netFscore = 0;
+		
+		System.out.print("CLASS|");
+
+			System.out.print(String.format("%20s  |", "Instances"));
+			System.out.print(String.format("%20s  |", "Precision"));
+			System.out.print(String.format("%20s  |", "Recall"));
+			System.out.print(String.format("%20s  |", "Fscore"));
+			System.out.println();
+			System.out.println("--------------------------------------------------------------------------------------------------");
+
+
+		for(String origLabel : classFrequency.keySet()) {
+			System.out.print(String.format("%3s  |", origLabel));
+			
+			Integer insCount = classFrequency.get(origLabel);
+			System.out.print(String.format("%20s  |", insCount));
+			
+			Integer cPredictions = correctPredictions.get(origLabel);
+			Integer totPredictions = predictions.get(origLabel);
+
+			if(cPredictions == null)
+				cPredictions = 0;
+			
+			if(totPredictions == null)
+				totPredictions = 0;
+			
+			double precision = (double)cPredictions/totPredictions;
+			double recall = (double)cPredictions/insCount;
+			double fScore = (2*precision*recall)/(precision+recall);
+			
+			System.out.print(String.format("%20s  |", precision));
+			System.out.print(String.format("%20s  |", recall));
+			System.out.print(String.format("%20s  |", fScore));
+
+			System.out.println();		
+			
+			double pClass = (double)insCount/samples;
+			netPrecision += pClass*precision;
+			netRecall += pClass*recall;
+			netFscore += pClass*fScore;
+		}
+
+		System.out.print(String.format("%3s  |", "NET"));
+		System.out.print(String.format("%20s  |", (int)samples));
+		System.out.print(String.format("%20s  |", netPrecision));
+		System.out.print(String.format("%20s  |", netRecall));
+		System.out.print(String.format("%20s  |", netFscore));
+		System.out.println();		
+		
+		return true;
 	}
 
 	/* Add another training example */

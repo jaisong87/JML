@@ -72,7 +72,7 @@ public class ID3DecisionTreeExample1 {
 
 			  dTree.setEntropyMeasure(EntropyMeasure.GAIN_RATIO);
 
-			  double trainingSplit = 0.90;
+			  double trainingSplit = 0.80;
 			  int sampleSize = allSamples.size();
 
 			  System.out.print(CommonUtils.getCompleteFeatureProfile(allSamples));
