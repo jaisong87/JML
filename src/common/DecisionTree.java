@@ -17,7 +17,8 @@ public class DecisionTree {
 	
 	/* Applicable for leafNodes */
 	boolean isLeaf, isNominalNode;
-	String classificationLabel; 
+	String classificationLabel;
+	private DecisionTree mlChild; 
 	
 	/* Internal node based on nominal feature */
 	public DecisionTree( int featureIdx) {
@@ -129,23 +130,34 @@ public class DecisionTree {
 	}
 
 	public DecisionTree getNominalBranch(String nomValue) {		
-		System.out.println("Following n"+nominalFeatureIdx+"="+nomValue + " => " +childNodes.get(nomValue));
-		return childNodes.get(nomValue);
+		
+		DecisionTree nextNode = childNodes.get(nomValue);
+		if(nextNode == null)
+			nextNode = mlChild;
+		//System.out.println("Following n"+nominalFeatureIdx+"="+nomValue + " => " +nextNode);
+		return nextNode;
 	}
 
-	public DecisionTree getRealBranch(double realValue) {
+	public DecisionTree getRealBranch(Double realValue) {
 		
+		if(realValue == null)
+			return mlChild;
 		if(realValue < realFeatureSplitPoint )
 			{
-			System.out.println("Following r"+realFeatureIdx+"<"+realValue + " => " +leftSubTree);
+			//System.out.println("Following r"+realFeatureIdx+"<"+realValue + " => " +leftSubTree);
 			return leftSubTree;
 			}
 
-		System.out.println("Following r"+realFeatureIdx+">="+realValue + " => " +rightSubTree);
+		//System.out.println("Following r"+realFeatureIdx+">="+realValue + " => " +rightSubTree);
 		return rightSubTree;
 	}
 
 	public String getClassLabel() {
 		return classificationLabel;
 	}
+
+	public void setMostLikelyChild(DecisionTree mostLikelyChild) {
+		mlChild = mostLikelyChild;
+	}
+	
 }

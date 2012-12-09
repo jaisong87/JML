@@ -20,7 +20,7 @@ import classifiers.ID3DecisionTree;
 public class ID3DecisionTreeExample1 {
 
 	public static Double parseDouble(String d) {
-		Double val = new Double(0.0);
+		Double val = null;
 		if(!d.equals("?"))
 			val = Double.parseDouble(d);
 		
@@ -89,8 +89,6 @@ public class ID3DecisionTreeExample1 {
 			  	System.out.println("Successfully run ID3 on the given data");
 				dTree.displayDebugInfo();
 
-			  dTree.test();
-		
-		dTree.train();
+			  dTree.test();		
 	}
 }

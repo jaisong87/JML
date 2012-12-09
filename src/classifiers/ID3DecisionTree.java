@@ -74,7 +74,7 @@ public class ID3DecisionTree extends Classifier {
 
 		}
 	
-		System.out.println("Predicting class as "+curNode.getClassLabel());
+		//System.out.println("Predicting class as "+curNode.getClassLabel());
 		return curNode.getClassLabel();
 	}
 
@@ -94,7 +94,6 @@ public class ID3DecisionTree extends Classifier {
 		}
 
 		if(vf.get(0).hasRealValues()) {
-			System.out.println("Trying to check for realNodes");
 			int realFeatueCount = vf.get(0).getRealValues().size();
 			for(int i=0;i<realFeatueCount;i++) {
 				DecisionTree tmpNode = getDecisionNodeForRealFeature(vf, i);
@@ -104,7 +103,6 @@ public class ID3DecisionTree extends Classifier {
 		}
 		
 		if(vf.get(0).hasCategoricalValues()) {
-			System.out.println("Trying to check for NominalNodes");
 			int nomFeatureCount = vf.get(0).getCategoricalValues().size();
 			for(int i=0;i<nomFeatureCount;i++) {
 				DecisionTree tmpNode = getDecisionNodeForNominalFeature(vf, i);
@@ -113,6 +111,7 @@ public class ID3DecisionTree extends Classifier {
 				}
 			}
 		
+		System.out.println("Projected Gain : "+decisionNode.getGain());
 		if(decisionNode.getGain() == 0.0) {
 			String majorityVote = CommonUtils.getMajorityVote(vf);
 
@@ -122,6 +121,7 @@ public class ID3DecisionTree extends Classifier {
 		}
 		
 		if(decisionNode.isNominalNode()) {
+			System.out.println("Trying to form NominalNodes");
 			/* Get buckets of children and their corresponding trees */
 			int featureIdx = decisionNode.getNominalFeatureIndex();
 			HashMap<String, Vector<FeatureVector>> childBuckets = new HashMap<String, Vector<FeatureVector>>();
@@ -140,36 +140,71 @@ public class ID3DecisionTree extends Classifier {
 				curBucket.add(curSample);
 			}
 			
+			DecisionTree mlBranch = null;
+			int maxBucketSize = 0;
+			
 			for(Map.Entry<String, Vector<FeatureVector>> bucket : childBuckets.entrySet()) {
 				String nomValue = bucket.getKey();
 				Vector<FeatureVector> vfChild = bucket.getValue();
 				
+//				if(vfChild.size() == 0)
+					System.out.println("ERR : Gonna learn on "+vfChild.size()+" set for n"+featureIdx+"="+nomValue);
 				DecisionTree childNode = learnDecisionTree(vfChild);
 				childNodes.put(nomValue, childNode);
+				
+				if(vfChild.size() > maxBucketSize) {
+					maxBucketSize = vfChild.size();
+					mlBranch = childNode;
+				}
 			}
+
 			decisionNode.setNominalChildMap(childNodes);
+			decisionNode.setMostLikelyChild(mlBranch);
+			
 			System.out.println("Adding a child map of size "+childNodes.size()+" to a nominal node");
 		}
 		else { 
+			System.out.println("Trying to form realNodes");
 			int featureIdx = decisionNode.getRealFeatureIndex();
 			double splitPoint = decisionNode.getRealFeatureSplitPoint();
 			
 			Vector<FeatureVector> leftSubTree = new Vector<FeatureVector>(); 
 			Vector<FeatureVector> rightSubTree = new Vector<FeatureVector>(); 
+			Vector<FeatureVector> unknownSubTree = new Vector<FeatureVector>(); 
 
 			for(int i=0;i<vf.size();i++) {
 				FeatureVector curSample = vf.get(i);
-				double realFeatureValue = curSample.getRealValues().get(featureIdx);
+				Double realFeatureValue = curSample.getRealValues().get(featureIdx);
 				
-				if(realFeatureValue < splitPoint) 
+				if(realFeatureValue == null)
+					unknownSubTree.add(curSample);
+				else if(realFeatureValue < splitPoint) 
 					leftSubTree.add(curSample);
 				else
 					rightSubTree.add(curSample);
 			}
+			
+			System.out.println(" < "+leftSubTree.size()+"  null : "+unknownSubTree.size()+" >= "+rightSubTree.size());
 
+			if(leftSubTree.size() > rightSubTree.size()) 
+			{
+				leftSubTree.addAll(unknownSubTree);
+			}
+			else {
+				rightSubTree.addAll(unknownSubTree);				
+			}
+
+			System.out.println("ERR : Gonna learn on "+leftSubTree.size()+" set for r"+featureIdx+"<"+splitPoint);
 			DecisionTree leftChild = learnDecisionTree(leftSubTree);
+			System.out.println("ERR : Gonna learn on "+rightSubTree.size()+" set for r"+featureIdx+">="+splitPoint);
 			DecisionTree rightChild = learnDecisionTree(rightSubTree);
 			decisionNode.setSubTrees(leftChild, rightChild);
+			
+			if(leftSubTree.size() > rightSubTree.size())
+				decisionNode.setMostLikelyChild(leftChild);
+			else 
+				decisionNode.setMostLikelyChild(rightChild);
+				
 			System.out.println("Adding two subtrees to a real node");
 		}
 		
@@ -214,7 +249,9 @@ public class ID3DecisionTree extends Classifier {
 			HashSet<Double> possibleSplitPoints = new HashSet<Double>();
 			
 			for(int i=0;i<vf.size();i++) {
-				possibleSplitPoints.add(vf.get(i).getRealValues().get(featureIdx));
+				Double curVal = vf.get(i).getRealValues().get(featureIdx);
+				if(curVal != null)
+					possibleSplitPoints.add(curVal);
 			}
 			
 			double bestGain = 0, bestSplitPoint = -1;

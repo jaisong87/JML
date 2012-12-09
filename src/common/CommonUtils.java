@@ -9,6 +9,9 @@ import java.util.Vector;
 
 public class CommonUtils {
 
+	public enum EntropyMeasure { INFO_GAIN, GAIN_RATIO };
+	public enum DistanceMeasure { MAHATTAN_DIS, EUCLIDIAN_DIS };
+	
 	public static String getMajorityVote(Vector<FeatureVector> vf) {
 		HashMap<String, Integer> classFrqMap = new HashMap<String, Integer>();
 		int totalSamples = vf.size();
@@ -101,31 +104,44 @@ public class CommonUtils {
 	 */
 	public static double getInformationGainOnRealFeature(Vector<FeatureVector> vf, int featureIdx, double curSplitPoint) {
 		double rootEntropy = CommonUtils.getEntropy(vf);
-		double childEntropy = 0;
+		double intrinsicValue = 0;
 		int totalSamples = vf.size();
 		
 		Vector<FeatureVector> leftSubTree = new Vector<FeatureVector>();
 		Vector<FeatureVector> rightSubTree = new Vector<FeatureVector>();
+		Vector<FeatureVector> unknownSubTree = new Vector<FeatureVector>();
 		
-		for(int i=0;i<totalSamples;i++) { /* Segragate into sets based on nominal feature value*/
+		for(int i=0;i<vf.size();i++) { /* Segragate into sets based on nominal feature value*/
 			FeatureVector curSample = vf.get(i);
-			double realValue = curSample.getRealValues().get(featureIdx);
+			Double realValue = curSample.getRealValues().get(featureIdx);
 			
+			if(realValue != null) {
 			if(realValue < curSplitPoint)
 				leftSubTree.add(curSample);
 			else 	
 				rightSubTree.add(curSample);
+		} else {
+			unknownSubTree.add(curSample);
+		}
+			}
+
+		if(leftSubTree.size() > rightSubTree.size()) 
+		{
+			leftSubTree.addAll(unknownSubTree);
+		}
+		else {
+			rightSubTree.addAll(unknownSubTree);				
 		}
 		
 		/* calculate child entropy as weighted sum of entropies across left and right children */
 		 
 			double leftTreeWeight = (double)leftSubTree.size()/(double)totalSamples;
-			childEntropy += leftTreeWeight*CommonUtils.getEntropy(leftSubTree);
+			intrinsicValue += leftTreeWeight*CommonUtils.getEntropy(leftSubTree);
 
 			double rightTreeWeight = (double)rightSubTree.size()/(double)totalSamples;
-			childEntropy += rightTreeWeight*CommonUtils.getEntropy(rightSubTree);
+			intrinsicValue += rightTreeWeight*CommonUtils.getEntropy(rightSubTree);
 			
-		return rootEntropy - childEntropy;
+		return rootEntropy - intrinsicValue;
 	}
 	
 	public static double getEuclidianDistance(FeatureVector f1, FeatureVector f2) 
@@ -177,11 +193,13 @@ public class CommonUtils {
 		double min = vf.get(0).getRealValues().get(featureIdx);
 		double max = vf.get(0).getRealValues().get(featureIdx);
 
-		int totSamples = vf.size(), maxFrq = 0;
+		int totSamples = vf.size(), maxFrq = 0, unknownValues = 0;
 
 		for(int i=0;i<totSamples;i++)
 		{
-			double curVal = vf.get(i).getRealValues().get(featureIdx);
+			Double curVal = vf.get(i).getRealValues().get(featureIdx);
+			
+			if(curVal !=null) {
 			Integer curValFrq = values.get(curVal);
 			if(curValFrq == null)
 				curValFrq = 1;
@@ -197,6 +215,10 @@ public class CommonUtils {
 			if(curVal > max) max = curVal;
 			
 			sum +=curVal;
+			}
+			else {
+				unknownValues++;
+			}
 		}
 		
 		mean = sum/totSamples;
@@ -204,6 +226,7 @@ public class CommonUtils {
 		profileInfo += (" Max      : " + max  + "\n" );
 		profileInfo += (" Mean     : " + mean + "\n" );
 		profileInfo += (" Mode     : " + mode + "\n");
+		profileInfo += (" Unknown  : " + unknownValues + "\n");
 		profileInfo += (" Distinct : " + values.size() +"\n");
 		profileInfo += (" Values : ");
 		
