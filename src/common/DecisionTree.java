@@ -68,6 +68,16 @@ public class DecisionTree {
 		return isNominalNode;
 	}
 
+	public boolean isLeafNode() {
+		return isLeaf;
+	}
+
+	public boolean isRealNode() {
+		if(!isLeaf && !isNominalNode)
+			return true;
+		return false;
+	}
+
 	public int getNominalFeatureIndex() {
 		return nominalFeatureIdx;
 	}
@@ -82,26 +92,60 @@ public class DecisionTree {
 	
 	public String getTree(int level) {
 		String treeExpr = "";
-		for(int i=0;i<level;i++)
-			treeExpr+="|   ";
+		//for(int i=0;i<level;i++)
+			//treeExpr+="|   ";
 		
 		/* Write Logic later*/
 		if(isLeaf) {
-			treeExpr += "CLASS="+classificationLabel+"\n";
+			treeExpr += " -> CLASS = "+classificationLabel+"\n";
 		}
 		
 		else if(isNominalNode) {
-			treeExpr += "Split On NOM : "+nominalFeatureIdx+"("+childNodes.size()+" children)\n";
+			//treeExpr += "Split On NOM : "+nominalFeatureIdx+"("+childNodes.size()+" children)\n";
 			
 			for( Map.Entry<String, DecisionTree>child : childNodes.entrySet())
-				treeExpr += child.getKey() + " " + child.getValue().getTree(level+1);
+				{
+				treeExpr+="\n";
+				for(int i=0;i<level;i++)
+					treeExpr+=" |\t";
+
+				treeExpr += "n"+getNominalFeatureIndex()+"="+child.getKey() + child.getValue().getTree(level+1);
+				}
 		}
 		else {
-			treeExpr += "Split on Real : " + realFeatureIdx+" < " + realFeatureSplitPoint+" => "+leftSubTree.getTree(level+1)+"\n";				
-			treeExpr += "Split on Real : " + realFeatureIdx+" >= " + realFeatureSplitPoint+" => "+rightSubTree.getTree(level+1)+"\n";				
+			treeExpr+="\n";
+			for(int i=0;i<level;i++)
+				treeExpr+=" |\t";
+
+			treeExpr += "r" + realFeatureIdx+"<" + realFeatureSplitPoint+leftSubTree.getTree(level+1);				
+
+			treeExpr+="\n";
+			for(int i=0;i<level;i++)
+				treeExpr+=" |\t";
+			treeExpr += "r" + realFeatureIdx+">=" + realFeatureSplitPoint+rightSubTree.getTree(level+1);				
 		}
 		
 		return treeExpr;
 	}
 
+	public DecisionTree getNominalBranch(String nomValue) {		
+		System.out.println("Following n"+nominalFeatureIdx+"="+nomValue + " => " +childNodes.get(nomValue));
+		return childNodes.get(nomValue);
+	}
+
+	public DecisionTree getRealBranch(double realValue) {
+		
+		if(realValue < realFeatureSplitPoint )
+			{
+			System.out.println("Following r"+realFeatureIdx+"<"+realValue + " => " +leftSubTree);
+			return leftSubTree;
+			}
+
+		System.out.println("Following r"+realFeatureIdx+">="+realValue + " => " +rightSubTree);
+		return rightSubTree;
+	}
+
+	public String getClassLabel() {
+		return classificationLabel;
+	}
 }

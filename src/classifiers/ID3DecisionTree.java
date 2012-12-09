@@ -50,8 +50,32 @@ public class ID3DecisionTree extends Classifier {
 			ClassifierException, FeatureVectorException {
 		if(decisionRoot == null)
 			throw new ClassifierException("ID3 Exception : NULL decision tree. Forgot to train ?");
-		// TODO Auto-generated method stub
-		return null;
+		
+		System.out.println(fv.getFeatureCSVString(","));
+		
+		DecisionTree curNode = decisionRoot;
+		while(!curNode.isLeafNode()) {
+
+			if(curNode.isNominalNode()) {
+				int featureIdx = curNode.getNominalFeatureIndex();
+				String nomValue = fv.getCategoricalValues().get(featureIdx);
+			
+				curNode = curNode.getNominalBranch(nomValue);
+			}
+			else {
+				int featureIdx = curNode.getRealFeatureIndex();
+				double realValue = fv.getRealValues().get(featureIdx);
+				
+				curNode = curNode.getRealBranch(realValue);
+			}
+
+			if(curNode == null)
+				throw new ClassifierException("ID3 Exception : No branch to continue");
+
+		}
+	
+		System.out.println("Predicting class as "+curNode.getClassLabel());
+		return curNode.getClassLabel();
 	}
 
 	private DecisionTree learnDecisionTree(Vector<FeatureVector> vf) throws ClassifierException {
@@ -88,6 +112,14 @@ public class ID3DecisionTree extends Classifier {
 					decisionNode = tmpNode;
 				}
 			}
+		
+		if(decisionNode.getGain() == 0.0) {
+			String majorityVote = CommonUtils.getMajorityVote(vf);
+
+			decisionNode = new DecisionTree(majorityVote);
+			System.out.println("Made a majorityVote based leaf node");
+			return decisionNode;
+		}
 		
 		if(decisionNode.isNominalNode()) {
 			/* Get buckets of children and their corresponding trees */

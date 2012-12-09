@@ -1,42 +1,96 @@
 package examples;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Vector;
 
 import common.ClassifierException;
+import common.CommonUtils;
 import common.FeatureVector;
+import common.FeatureVectorException;
 import common.TrainingException;
 
 import classifiers.ID3DecisionTree;
 
 public class ID3DecisionTreeExample1 {
 
-	public static void main(String args[]) throws TrainingException, ClassifierException {
+	public static Double parseDouble(String d) {
+		Double val = new Double(0.0);
+		if(!d.equals("?"))
+			val = Double.parseDouble(d);
+		
+		return val;
+	}
+	
+	public static void main(String args[]) throws TrainingException, ClassifierException, IOException, FeatureVectorException {
 		
 		ID3DecisionTree dTree = new ID3DecisionTree();
 		
-		for(int i=0;i<10;i++) {
-		
-		Vector<String> nomValues = new Vector<String>();
-		Vector<Double> realValues = new Vector<Double>();
-		String classLabel;
-		
-		if(i%2==0) {
-			classLabel = "Male";
-			nomValues.add("Rough");
-			realValues.add(20.0+(i/10));
-		}
-		else {
-			classLabel = "FeMale";
-			nomValues.add("Soft");			
-			realValues.add(10.0+(i/10));
-		}
+			
+			  FileInputStream inputStream = new FileInputStream("samples");
+			  BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, Charset.forName("UTF-8")));
+			  String line;
+			  int sampleCount = 0;
 
-		FeatureVector fv = new FeatureVector(null, null, realValues, classLabel, 0);
-		dTree.addTrainingExample(fv);
-		}
+			  Vector<FeatureVector> allSamples = new Vector<FeatureVector>();
+			  
+			  while( ((line = br.readLine()) != null ) )
+			  {
+				  sampleCount++;
+				  //System.out.println("Line : "+line);
+				  String[] values = line.split(",");
+				  
+				  Vector<String> nomValues = new Vector<String>();
+				  nomValues.add(values[0]);
+				  nomValues.add(values[3]);
+				  nomValues.add(values[4]);
+				  nomValues.add(values[5]);
+				  nomValues.add(values[6]);
+				  nomValues.add(values[8]);
+				  nomValues.add(values[9]);
+				  nomValues.add(values[11]);
+				  nomValues.add(values[12]);
+				  
+				  Vector<Double> realValues = new Vector<Double>();
+				  realValues.add(parseDouble(values[1]));
+				  realValues.add(parseDouble(values[2]));
+				  realValues.add(parseDouble(values[7]));
+				  realValues.add(parseDouble(values[10]));
+				  realValues.add(parseDouble(values[13]));
+				  realValues.add(parseDouble(values[14]));
+				  
+				  String classLabel = values[15];				  
+				  FeatureVector fv = new FeatureVector(nomValues, null, realValues, classLabel, 0.0);
+				  allSamples.add(fv);
+			  }
+
+			  double trainingSplit = 0.90;
+			  int sampleSize = allSamples.size();
+
+			  System.out.print(CommonUtils.getCompleteFeatureProfile(allSamples));
+			  
+			  for(int i=0;i<(trainingSplit*sampleSize);i++)
+				  dTree.addTrainingExample(allSamples.get(i));
+
+			  System.out.println("Successfully added trainingSet");
+			  
+			  for(int i=(int)(trainingSplit*sampleSize);i<sampleSize;i++)
+				  dTree.addTestExample(allSamples.get(i));
+
+			  System.out.println("Successfully added testSet");
+			  
+			  dTree.train();
+
+			  	System.out.println("Successfully run ID3 on the given data");
+				dTree.displayDebugInfo();
+
+			  dTree.test();
 		
 		dTree.train();
-		System.out.println("Successfully run ID3 on the given data");
-		dTree.displayDebugInfo();
 	}
 }
