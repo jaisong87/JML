@@ -2,24 +2,22 @@ package examples;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Vector;
 
+import classifiers.ID3DecisionTree;
+import classifiers.NaiveBayes;
+
 import common.ClassifierException;
 import common.CommonUtils;
-import common.CommonUtils.EntropyMeasure;
 import common.FeatureVector;
 import common.FeatureVectorException;
 import common.TrainingException;
+import common.CommonUtils.EntropyMeasure;
 
-import classifiers.ID3DecisionTree;
-
-public class ID3DecisionTreeExample1 {
-
+public class NaiveBayesExample2 {
 	public static Double parseDouble(String d) {
 		Double val = null;
 		if(!d.equals("?"))
@@ -30,7 +28,7 @@ public class ID3DecisionTreeExample1 {
 	
 	public static void main(String args[]) throws TrainingException, ClassifierException, IOException, FeatureVectorException {
 		
-		ID3DecisionTree dTree = new ID3DecisionTree();
+		NaiveBayes nBayes = new NaiveBayes();
 		
 			
 			  FileInputStream inputStream = new FileInputStream("samples");
@@ -70,30 +68,29 @@ public class ID3DecisionTreeExample1 {
 				  allSamples.add(fv);
 			  }
 
-			  dTree.setEntropyMeasure(EntropyMeasure.GAIN_RATIO);
+			 // dTree.setEntropyMeasure(EntropyMeasure.GAIN_RATIO);
 
-			  double trainingSplit = 0.90;
+			  double trainingSplit = 0.70;
 			  int sampleSize = allSamples.size();
 
 			  System.out.print(CommonUtils.getCompleteFeatureProfile(allSamples));
-			  System.out.println("EntropyMeasure "+dTree.getEntropyMeasure());
 			  
 			  for(int i=0;i<(trainingSplit*sampleSize);i++)
-				  dTree.addTrainingExample(allSamples.get(i));
+				  nBayes.addTrainingExample(allSamples.get(i));
 
 			  System.out.println("Successfully added trainingSet");
 			  
 			  for(int i=(int)(trainingSplit*sampleSize);i<sampleSize;i++)
-				  dTree.addTestExample(allSamples.get(i));
+				  nBayes.addTestExample(allSamples.get(i));
 
 			  System.out.println("Successfully added testSet");
 
-			  dTree.train();
+			  nBayes.train();
 
 			  	System.out.println("Successfully run ID3 on the given data");
-				dTree.displayDebugInfo();
 
-			  dTree.test();
+			  nBayes.test();
 			  
 	}
+
 }

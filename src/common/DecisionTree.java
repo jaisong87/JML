@@ -118,12 +118,12 @@ public class DecisionTree {
 			for(int i=0;i<level;i++)
 				treeExpr+=" |\t";
 
-			treeExpr += "r" + realFeatureIdx+"<" + realFeatureSplitPoint+leftSubTree.getTree(level+1);				
+			treeExpr += "r" + realFeatureIdx+"<" + realFeatureSplitPoint+"(E" + entropy + ", G" + gain + ")" +leftSubTree.getTree(level+1);				
 
 			treeExpr+="\n";
 			for(int i=0;i<level;i++)
 				treeExpr+=" |\t";
-			treeExpr += "r" + realFeatureIdx+">=" + realFeatureSplitPoint+rightSubTree.getTree(level+1);				
+			treeExpr += "r" + realFeatureIdx+">=" + realFeatureSplitPoint + "(E" + entropy + ", G" + gain + ")" + rightSubTree.getTree(level+1);				
 		}
 		
 		return treeExpr;

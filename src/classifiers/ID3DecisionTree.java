@@ -12,6 +12,7 @@ import java.util.Vector;
 import common.Classifier;
 import common.ClassifierException;
 import common.CommonUtils;
+import common.CommonUtils.EntropyMeasure;
 import common.DecisionTree;
 import common.FeatureVector;
 import common.FeatureVectorException;
@@ -24,12 +25,18 @@ import common.TrainingException;
 public class ID3DecisionTree extends Classifier {
 
 	DecisionTree decisionRoot;
-
+	EntropyMeasure e;
+	
 	/**
 	 * 
 	 */
 	public ID3DecisionTree() {
 		_classifierName = "ID3DecisionTree";
+		e = EntropyMeasure.INFO_GAIN;
+	}
+
+	public void setEntropyMeasure(EntropyMeasure em) {
+		e = em;
 	}
 
 	/* (non-Javadoc)
@@ -64,7 +71,7 @@ public class ID3DecisionTree extends Classifier {
 			}
 			else {
 				int featureIdx = curNode.getRealFeatureIndex();
-				double realValue = fv.getRealValues().get(featureIdx);
+				Double realValue = fv.getRealValues().get(featureIdx);
 				
 				curNode = curNode.getRealBranch(realValue);
 			}
@@ -89,7 +96,6 @@ public class ID3DecisionTree extends Classifier {
 		double curEntropy = CommonUtils.getEntropy(vf);
 		if(curEntropy == 0) {
 			decisionNode = new DecisionTree(vf.get(0).getClassification());
-			System.out.println("Leanred a ZERO entropy node");
 			return decisionNode;
 		}
 
@@ -111,17 +117,14 @@ public class ID3DecisionTree extends Classifier {
 				}
 			}
 		
-		System.out.println("Projected Gain : "+decisionNode.getGain());
 		if(decisionNode.getGain() == 0.0) {
 			String majorityVote = CommonUtils.getMajorityVote(vf);
 
 			decisionNode = new DecisionTree(majorityVote);
-			System.out.println("Made a majorityVote based leaf node");
 			return decisionNode;
 		}
 		
 		if(decisionNode.isNominalNode()) {
-			System.out.println("Trying to form NominalNodes");
 			/* Get buckets of children and their corresponding trees */
 			int featureIdx = decisionNode.getNominalFeatureIndex();
 			HashMap<String, Vector<FeatureVector>> childBuckets = new HashMap<String, Vector<FeatureVector>>();
@@ -147,8 +150,6 @@ public class ID3DecisionTree extends Classifier {
 				String nomValue = bucket.getKey();
 				Vector<FeatureVector> vfChild = bucket.getValue();
 				
-//				if(vfChild.size() == 0)
-					System.out.println("ERR : Gonna learn on "+vfChild.size()+" set for n"+featureIdx+"="+nomValue);
 				DecisionTree childNode = learnDecisionTree(vfChild);
 				childNodes.put(nomValue, childNode);
 				
@@ -159,12 +160,9 @@ public class ID3DecisionTree extends Classifier {
 			}
 
 			decisionNode.setNominalChildMap(childNodes);
-			decisionNode.setMostLikelyChild(mlBranch);
-			
-			System.out.println("Adding a child map of size "+childNodes.size()+" to a nominal node");
+			decisionNode.setMostLikelyChild(mlBranch);			
 		}
 		else { 
-			System.out.println("Trying to form realNodes");
 			int featureIdx = decisionNode.getRealFeatureIndex();
 			double splitPoint = decisionNode.getRealFeatureSplitPoint();
 			
@@ -184,8 +182,6 @@ public class ID3DecisionTree extends Classifier {
 					rightSubTree.add(curSample);
 			}
 			
-			System.out.println(" < "+leftSubTree.size()+"  null : "+unknownSubTree.size()+" >= "+rightSubTree.size());
-
 			if(leftSubTree.size() > rightSubTree.size()) 
 			{
 				leftSubTree.addAll(unknownSubTree);
@@ -194,18 +190,14 @@ public class ID3DecisionTree extends Classifier {
 				rightSubTree.addAll(unknownSubTree);				
 			}
 
-			System.out.println("ERR : Gonna learn on "+leftSubTree.size()+" set for r"+featureIdx+"<"+splitPoint);
 			DecisionTree leftChild = learnDecisionTree(leftSubTree);
-			System.out.println("ERR : Gonna learn on "+rightSubTree.size()+" set for r"+featureIdx+">="+splitPoint);
 			DecisionTree rightChild = learnDecisionTree(rightSubTree);
 			decisionNode.setSubTrees(leftChild, rightChild);
 			
 			if(leftSubTree.size() > rightSubTree.size())
 				decisionNode.setMostLikelyChild(leftChild);
 			else 
-				decisionNode.setMostLikelyChild(rightChild);
-				
-			System.out.println("Adding two subtrees to a real node");
+				decisionNode.setMostLikelyChild(rightChild);				
 		}
 		
 		return decisionNode;
@@ -224,7 +216,7 @@ public class ID3DecisionTree extends Classifier {
 				decisionNode = new DecisionTree(vf.get(0).getClassification());
 			}
 			else {
-				double gain = CommonUtils.getInformationGainOnNominalFeature(vf, featureIdx);
+				double gain = CommonUtils.getInformationGainOnNominalFeature(vf, featureIdx, e);
 				decisionNode = new DecisionTree(featureIdx);
 				decisionNode.setEntropy(curEntropy);
 				decisionNode.setGain(gain);
@@ -259,7 +251,7 @@ public class ID3DecisionTree extends Classifier {
 			Iterator itr = possibleSplitPoints.iterator();
 			while(itr.hasNext()) {
 				double curSplitPoint = (Double) itr.next();
-				double gain = CommonUtils.getInformationGainOnRealFeature(vf, featureIdx, curSplitPoint);
+				double gain = CommonUtils.getInformationGainOnRealFeature(vf, featureIdx, curSplitPoint, e);
 				
 				if(gain > bestGain) {
 					bestGain = gain;
@@ -276,6 +268,10 @@ public class ID3DecisionTree extends Classifier {
 
 	public void displayDebugInfo() {
 		System.out.println(decisionRoot.getTree(0));
+	}
+
+	public EntropyMeasure getEntropyMeasure() {
+		return e;
 	}
 
 }

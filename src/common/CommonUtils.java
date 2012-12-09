@@ -69,9 +69,9 @@ public class CommonUtils {
 	/*
 	 * Calculate the info gain for splitting across a nominal 
 	 */
-	public static double getInformationGainOnNominalFeature(Vector<FeatureVector> vf, int featureIdx) {
+	public static double getInformationGainOnNominalFeature(Vector<FeatureVector> vf, int featureIdx, EntropyMeasure e) {
 		double rootEntropy = CommonUtils.getEntropy(vf);
-		double childEntropy = 0;
+		double intrinsicValue = 0;
 		int totalSamples = vf.size();
 		
 		HashMap<String, Vector<FeatureVector>> childMap = new HashMap<String, Vector<FeatureVector>>();
@@ -93,16 +93,20 @@ public class CommonUtils {
 		 */
 		for(Vector<FeatureVector> childNode : childMap.values()) { 
 			double childNodeWeight = (double)childNode.size()/(double)totalSamples;
-			childEntropy += childNodeWeight*CommonUtils.getEntropy(childNode);
+			intrinsicValue += childNodeWeight*CommonUtils.getEntropy(childNode);
 		}
 		
-		return rootEntropy - childEntropy;
+		double gain = rootEntropy - intrinsicValue;
+		if(e == EntropyMeasure.GAIN_RATIO) {
+			gain /= (intrinsicValue + 0.00000001);
+		}
+		return gain;
 	}
 
 	/*
 	 * Calculate the info gain for splitting across a real valued feature 
 	 */
-	public static double getInformationGainOnRealFeature(Vector<FeatureVector> vf, int featureIdx, double curSplitPoint) {
+	public static double getInformationGainOnRealFeature(Vector<FeatureVector> vf, int featureIdx, double curSplitPoint, EntropyMeasure e) {
 		double rootEntropy = CommonUtils.getEntropy(vf);
 		double intrinsicValue = 0;
 		int totalSamples = vf.size();
@@ -141,7 +145,11 @@ public class CommonUtils {
 			double rightTreeWeight = (double)rightSubTree.size()/(double)totalSamples;
 			intrinsicValue += rightTreeWeight*CommonUtils.getEntropy(rightSubTree);
 			
-		return rootEntropy - intrinsicValue;
+		double gain = rootEntropy - intrinsicValue;
+		if(e == EntropyMeasure.GAIN_RATIO) {
+			gain /= (intrinsicValue + 0.00000001);
+		}
+		return gain;
 	}
 	
 	public static double getEuclidianDistance(FeatureVector f1, FeatureVector f2) 
@@ -183,6 +191,39 @@ public class CommonUtils {
 		}
 		
 		return euclidianDis;
+	}
+		
+	public static String getNominalFeatureProfile(Vector<FeatureVector> vf, int featureIdx) {
+		String profileInfo = "=========== Profiling n"+featureIdx + " =============== \n";
+		HashMap<String, Integer> values = new HashMap<String, Integer>();
+	
+		int totSamples = vf.size(), unknownValues = 0;
+		for(int i=0;i<totSamples;i++)
+		{
+			String curVal = vf.get(i).getCategoricalValues().get(featureIdx);
+			if(curVal !=null) {
+			Integer curValFrq = values.get(curVal);
+			if(curValFrq == null)
+				curValFrq = 1;			
+
+			values.put(curVal , curValFrq);
+			} else {
+				unknownValues++;
+			}
+		}
+		
+		for(Map.Entry<String,Integer> entry : values.entrySet() ) {
+			String curValue = (String) entry.getKey();
+			int curValFrq = entry.getValue();
+
+			double likelihood = (double)curValFrq/totSamples;
+			profileInfo += curValue +" : " + likelihood +"% \n";
+		}
+		
+//			double uLikelihood = (double)unknownValues/totSamples;
+//			profileInfo += "Unknown : " + uLikelihood +"% \n";
+
+			return profileInfo;
 	}
 	
 	public static String getRealFeatureProfile(Vector<FeatureVector> vf, int featureIdx) {
@@ -287,6 +328,9 @@ public class CommonUtils {
 		for(int i=0;i<realFeatureCount;i++)
 			featureInfo += getRealFeatureProfile(vf, i);
 		
+		for(int i=0;i<nomFeatureCount;i++)
+			featureInfo += getNominalFeatureProfile(vf, i);
+
 		if(fv.isClassificationProblem())
 				featureInfo += getClassLabelProfile(vf);
 		
